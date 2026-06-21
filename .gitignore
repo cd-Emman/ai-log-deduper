@@ -22,6 +22,9 @@ pip-delete-this-directory.txt
 *.tfvars
 *.tfvars.json
 .terraform.lock.hcl
+*.plan
+*plan*
+
 
 # IDEs & System
 .idea/
