@@ -66,6 +66,11 @@ resource "aws_iam_role_policy_attachment" "lambda_logs" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+resource "aws_iam_role_policy_attachment" "lambda_vpc" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+}
+
 resource "aws_iam_role_policy_attachment" "lambda_custom" {
   role       = aws_iam_role.lambda_role.name
   policy_arn = aws_iam_policy.lambda_policy.arn
@@ -86,6 +91,7 @@ resource "aws_lambda_function" "processor" {
   runtime          = "python3.11"
   timeout          = 15
 
+
   environment {
     variables = {
       DYNAMODB_TABLE_NAME = aws_dynamodb_table.table.name
@@ -98,6 +104,6 @@ resource "aws_lambda_function" "processor" {
 resource "aws_lambda_event_source_mapping" "sqs_trigger" {
   event_source_arn = aws_sqs_queue.queue.arn
   function_name    = aws_lambda_function.processor.arn
-  batch_size       = 10
+  batch_size       = 1
   enabled          = true
 }
