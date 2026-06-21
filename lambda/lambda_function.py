@@ -1,9 +1,11 @@
 import os
 import json
+import time
 import hashlib
 import urllib.request
 import urllib.error
 import logging
+
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -24,7 +26,7 @@ def get_gemini_analysis(service: str, raw_log: str) -> str:
         logger.warning("GEMINI_API_KEY not configured. Skipping.")
         return "Gemini API key not configured. Logging error analysis skipped."
 
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
     
     prompt = (
         f"You are an expert SRE. Analyze this error log from the service '{service}':\n\n"
@@ -40,14 +42,16 @@ def get_gemini_analysis(service: str, raw_log: str) -> str:
         "contents": [{"parts": [{"text": prompt}]}]
     }
     
-    headers = {"Content-Type": "application/json"}
+    headers = {
+        "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    }
     req = urllib.request.Request(
         url,
         data=json.dumps(payload).encode("utf-8"),
         headers=headers,
         method="POST"
     )
-    
     try:
         with urllib.request.urlopen(req) as response:
             res_data = json.loads(response.read().decode("utf-8"))
@@ -55,6 +59,7 @@ def get_gemini_analysis(service: str, raw_log: str) -> str:
     except Exception as e:
         logger.error(f"Gemini API request failed: {e}")
         return f"Error analyzing log via Gemini: {str(e)}"
+
 
 def send_webhook_alert(content: str):
     if not DISCORD_WEBHOOK_URL or DISCORD_WEBHOOK_URL.startswith("your_"):
@@ -67,7 +72,10 @@ def send_webhook_alert(content: str):
         "text": content
     }
     
-    headers = {"Content-Type": "application/json"}
+    headers = {
+        "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    }
     req = urllib.request.Request(
         DISCORD_WEBHOOK_URL,
         data=json.dumps(payload).encode("utf-8"),
@@ -107,13 +115,21 @@ def lambda_handler(event, context):
                         "error_hash": log_hash,
                         "service": service,
                         "raw_log": raw_log,
-                        "timestamp": int(context.epoch_now_ms / 1000) if context else 0
+                        "timestamp": int(time.time())
                     },
                     ConditionExpression="attribute_not_exists(error_hash)"
                 )
                 
                 logger.info(f"New unique log found ({log_hash}). Analyzing...")
                 analysis = get_gemini_analysis(service, raw_log)
+                
+                # Fallback to raw log alert if Gemini API is rate-limited or fails
+                if "Error analyzing log via Gemini" in analysis:
+                    analysis = (
+                        f"🚨 **New Unique Error in {service}** (AI Summary Unavailable)\n"
+                        f"**Raw Log:**\n```\n{raw_log}\n```"
+                    )
+                
                 send_webhook_alert(analysis)
 
             except ClientError as e:

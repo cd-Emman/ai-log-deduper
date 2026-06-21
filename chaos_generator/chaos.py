@@ -6,7 +6,7 @@ import requests
 
 # Gateway configuration from env, fallback to localhost
 GATEWAY_URL = os.environ.get("GATEWAY_URL", "http://localhost:8000/logs")
-INTERVAL = float(os.environ.get("GENERATOR_INTERVAL_SECONDS", "3.0"))
+INTERVAL = float(os.environ.get("GENERATOR_INTERVAL_SECONDS", "10.0"))
 
 SERVICES = ["payment-processor", "user-auth", "inventory-db", "frontend-gateway"]
 
