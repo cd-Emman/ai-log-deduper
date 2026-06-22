@@ -90,7 +90,7 @@ resource "aws_lambda_function" "processor" {
   handler          = "lambda_function.lambda_handler"
   runtime          = "python3.11"
   timeout          = 15
-
+  reserved_concurrent_executions = 1
 
   environment {
     variables = {

@@ -52,6 +52,7 @@ def get_gemini_analysis(service: str, raw_log: str) -> str:
         headers=headers,
         method="POST"
     )
+    time.sleep(4) # sleep to stay under the 15 RPM rate limit
     try:
         with urllib.request.urlopen(req) as response:
             res_data = json.loads(response.read().decode("utf-8"))
