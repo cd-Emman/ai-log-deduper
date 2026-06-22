@@ -89,8 +89,7 @@ resource "aws_lambda_function" "processor" {
   role             = aws_iam_role.lambda_role.arn
   handler          = "lambda_function.lambda_handler"
   runtime          = "python3.11"
-  timeout          = 15
-  reserved_concurrent_executions = 1
+  timeout          = 30
 
   environment {
     variables = {
