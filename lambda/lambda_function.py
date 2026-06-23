@@ -52,14 +52,26 @@ def get_gemini_analysis(service: str, raw_log: str) -> str:
         headers=headers,
         method="POST"
     )
-    time.sleep(4) # sleep to stay under the 15 RPM rate limit
-    try:
-        with urllib.request.urlopen(req) as response:
-            res_data = json.loads(response.read().decode("utf-8"))
-            return res_data["candidates"][0]["content"]["parts"][0]["text"]
-    except Exception as e:
-        logger.error(f"Gemini API request failed: {e}")
-        return f"Error analyzing log via Gemini: {str(e)}"
+    time.sleep(4)
+    max_retries = 3
+    backoff = 2
+    for attempt in range(max_retries):
+        try:
+            with urllib.request.urlopen(req) as response:
+                res_data = json.loads(response.read().decode("utf-8"))
+                return res_data["candidates"][0]["content"]["parts"][0]["text"]
+        except urllib.error.HTTPError as e:
+            # retry on transient gateway/capacity codes
+            if e.code in [429, 503] and attempt < max_retries - 1:
+                logger.warning(f"Gemini API returned {e.code}. Retrying in {backoff}s...")
+                time.sleep(backoff)
+                backoff *= 2
+            else:
+                logger.error(f"Gemini API HTTP error: {e}")
+                return f"Error analyzing log via Gemini: {str(e)}"
+        except Exception as e:
+            logger.error(f"Gemini API request failed: {e}")
+            return f"Error analyzing log via Gemini: {str(e)}"
 
 
 def send_webhook_alert(content: str):
