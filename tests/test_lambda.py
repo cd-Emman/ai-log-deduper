@@ -1,3 +1,5 @@
+import os
+import sys
 from unittest.mock import patch, MagicMock
 from botocore.exceptions import ClientError
 import pytest
@@ -16,8 +18,6 @@ def mock_get_parameter(Name, WithDecryption=True):
 
 mock_ssm.get_parameter.side_effect = mock_get_parameter
 
-import sys
-import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../lambda")))
 
 # Pre-populate environment variables for Lambda module initialization
@@ -28,7 +28,7 @@ os.environ["DISCORD_WEBHOOK_URL_PATH"] = "/mock/discord_webhook_url"
 # Import with boto3 mocks active, avoiding reserved keyword 'lambda' import syntax
 with patch("boto3.client", return_value=mock_ssm), \
      patch("boto3.resource", return_value=mock_db):
-    import lambda_function
+    import lambda_function  # noqa: E402
 
 @pytest.fixture
 def sqs_event():
