@@ -152,3 +152,65 @@ resource "aws_lambda_event_source_mapping" "sqs_trigger" {
   batch_size       = 1
   enabled          = true
 }
+
+resource "aws_cloudwatch_dashboard" "main" {
+  dashboard_name = "${var.project_name}-dashboard"
+
+  dashboard_body = jsonencode({
+    widgets = [
+      {
+        type   = "metric"
+        x      = 0
+        y      = 0
+        width  = 12
+        height = 6
+        properties = {
+          metrics = [
+            [ "AWS/SQS", "ApproximateNumberOfMessagesVisible", "QueueName", aws_sqs_queue.queue.name ],
+            [ "AWS/SQS", "ApproximateNumberOfMessagesNotVisible", "QueueName", aws_sqs_queue.queue.name ],
+            [ "AWS/SQS", "ApproximateNumberOfMessagesVisible", "QueueName", aws_sqs_queue.dlq.name ]
+          ]
+          view    = "timeSeries"
+          stacked = false
+          region  = var.aws_region
+          title   = "SQS Queue Performance"
+        }
+      },
+      {
+        type   = "metric"
+        x      = 12
+        y      = 0
+        width  = 12
+        height = 6
+        properties = {
+          metrics = [
+            [ "AWS/Lambda", "Invocations", "FunctionName", aws_lambda_function.processor.function_name ],
+            [ "AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.processor.function_name ],
+            [ "AWS/Lambda", "Duration", "FunctionName", aws_lambda_function.processor.function_name, { stat = "Average" } ]
+          ]
+          view    = "timeSeries"
+          stacked = false
+          region  = var.aws_region
+          title   = "Lambda Metrics"
+        }
+      },
+      {
+        type   = "metric"
+        x      = 0
+        y      = 6
+        width  = 24
+        height = 6
+        properties = {
+          metrics = [
+            [ "AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", aws_dynamodb_table.table.name ],
+            [ "AWS/DynamoDB", "ConsumedWriteCapacityUnits", "TableName", aws_dynamodb_table.table.name ]
+          ]
+          view    = "timeSeries"
+          stacked = false
+          region  = var.aws_region
+          title   = "DynamoDB Capacity"
+        }
+      }
+    ]
+  })
+}

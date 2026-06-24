@@ -51,7 +51,7 @@ lambda: The core engine. It grabs messages from SQS, hashes the log content, and
 
 ssm: Securely stores sensitive API keys and webhook URLs as encrypted parameters (SecureString), which Lambda retrieves at runtime.
 
-terraform: Contains the files needed to spin up all the AWS infrastructure (SQS queues, Lambda functions, DynamoDB tables, and roles) automatically without dealing with the AWS console manually.
+terraform: Contains the files needed to spin up all the AWS infrastructure (SQS queues, Lambda functions, DynamoDB tables, roles, and a custom CloudWatch dashboard for monitoring) automatically without dealing with the AWS console manually.
 
 ## API Documentation & Local Testing
 
