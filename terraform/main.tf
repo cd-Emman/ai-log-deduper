@@ -78,6 +78,16 @@ resource "aws_iam_policy" "lambda_policy" {
           "dynamodb:GetItem"
         ]
         Resource = aws_dynamodb_table.table.arn
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ssm:GetParameter"
+        ]
+        Resource = [
+          aws_ssm_parameter.gemini_api_key.arn,
+          aws_ssm_parameter.discord_webhook_url.arn
+        ]
       }
     ]
   })
@@ -104,6 +114,20 @@ data "archive_file" "lambda_zip" {
   output_path = "${path.module}/lambda_function.zip"
 }
 
+resource "aws_ssm_parameter" "gemini_api_key" {
+  name        = "/${var.project_name}/gemini_api_key"
+  type        = "SecureString"
+  value       = var.gemini_api_key
+  description = "API key for Gemini analysis"
+}
+
+resource "aws_ssm_parameter" "discord_webhook_url" {
+  name        = "/${var.project_name}/discord_webhook_url"
+  type        = "SecureString"
+  value       = var.discord_webhook_url
+  description = "Webhook URL to send alerts to Discord or Slack"
+}
+
 resource "aws_lambda_function" "processor" {
   filename         = data.archive_file.lambda_zip.output_path
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
@@ -115,9 +139,9 @@ resource "aws_lambda_function" "processor" {
 
   environment {
     variables = {
-      DYNAMODB_TABLE_NAME = aws_dynamodb_table.table.name
-      GEMINI_API_KEY      = var.gemini_api_key
-      DISCORD_WEBHOOK_URL = var.discord_webhook_url
+      DYNAMODB_TABLE_NAME      = aws_dynamodb_table.table.name
+      GEMINI_API_KEY_PATH      = aws_ssm_parameter.gemini_api_key.name
+      DISCORD_WEBHOOK_URL_PATH = aws_ssm_parameter.discord_webhook_url.name
     }
   }
 }

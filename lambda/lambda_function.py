@@ -12,10 +12,26 @@ from botocore.exceptions import ClientError
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-# load config variables from lambda environment settings
+# Initialize SSM client to load secrets securely
+ssm = boto3.client("ssm")
+
+def fetch_ssm_parameter(env_var_name):
+    param_path = os.environ.get(env_var_name)
+    if not param_path:
+        logger.warning(f"{env_var_name} environment variable is not configured.")
+        return None
+    try:
+        response = ssm.get_parameter(Name=param_path, WithDecryption=True)
+        return response["Parameter"]["Value"]
+    except ClientError as e:
+        logger.error(f"Failed to fetch parameter {param_path} from SSM: {e}")
+        return None
+
+# Load configuration and fetch keys from SSM
 DYNAMODB_TABLE_NAME = os.environ.get("DYNAMODB_TABLE_NAME")
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL")
+GEMINI_API_KEY = fetch_ssm_parameter("GEMINI_API_KEY_PATH")
+DISCORD_WEBHOOK_URL = fetch_ssm_parameter("DISCORD_WEBHOOK_URL_PATH")
+
 
 dynamodb = boto3.resource("dynamodb")
 table = dynamodb.Table(DYNAMODB_TABLE_NAME) if DYNAMODB_TABLE_NAME else None
