@@ -45,6 +45,8 @@ chaos_generator: A basic Python script that spits out random, messy errors and s
 
 gateway: A tiny FastAPI app running in a Docker container. It takes incoming logs from your apps and drops them straight into an SQS queue so the backend doesn't crash during a heavy traffic spike.
 
+sqs: Buffers logs to absorb traffic spikes. It includes a Dead Letter Queue (DLQ) with a maxReceiveCount of 3 and a redrive allow policy to isolate repeatedly failing messages safely without data loss.
+
 lambda: The core engine. It grabs messages from SQS, hashes the log content, and checks DynamoDB to see if we've seen it before. If it's a completely new error, it passes it to Gemini for a quick root-cause summary and hits a Discord/Slack webhook.
 
 terraform: Contains the files needed to spin up all the AWS infrastructure (SQS queues, Lambda functions, DynamoDB tables, and roles) automatically without dealing with the AWS console manually.
