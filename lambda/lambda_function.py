@@ -5,13 +5,12 @@ import hashlib
 import urllib.request
 import urllib.error
 import logging
+import boto3
+from botocore.exceptions import ClientError
 
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
-
-import boto3
-from botocore.exceptions import ClientError
 
 # load config variables from lambda environment settings
 DYNAMODB_TABLE_NAME = os.environ.get("DYNAMODB_TABLE_NAME")
