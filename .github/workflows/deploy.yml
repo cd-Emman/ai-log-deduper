@@ -38,6 +38,11 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
+      - name: Lowercase Repository Owner
+        id: repository_owner
+        run: |
+          echo "owner=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v2
         with:
@@ -51,8 +56,8 @@ jobs:
           context: ./gateway
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/ai-log-deduper-gateway:latest
-            ghcr.io/${{ github.repository_owner }}/ai-log-deduper-gateway:${{ github.sha }}
+            ghcr.io/${{ steps.repository_owner.outputs.owner }}/ai-log-deduper-gateway:latest
+            ghcr.io/${{ steps.repository_owner.outputs.owner }}/ai-log-deduper-gateway:${{ github.sha }}
 
   terraform-deploy:
     name: Deploy to AWS
