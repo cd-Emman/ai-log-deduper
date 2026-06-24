@@ -1,7 +1,14 @@
+resource "aws_sqs_queue" "dlq" {
+  name = "${var.project_name}-dlq"
+}
+
 resource "aws_sqs_queue" "queue" {
-  name = "${var.project_name}-queue"
-  # SQS visibility timeout needs to be equal to or greater than Lambda timeout
+  name                       = "${var.project_name}-queue"
   visibility_timeout_seconds = 30
+  redrive_policy = jsonencode({
+    deadLetterTargetArn = aws_sqs_queue.dlq.arn
+    maxReceiveCount     = 3
+  })
 }
 
 resource "aws_dynamodb_table" "table" {

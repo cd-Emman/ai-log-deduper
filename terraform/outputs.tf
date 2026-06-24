@@ -17,3 +17,14 @@ output "lambda_function_arn" {
   value       = aws_lambda_function.processor.arn
   description = "The ARN of the Lambda log processor"
 }
+
+output "sqs_dlq_url" {
+  value       = aws_sqs_queue.dlq.url
+  description = "The URL of the SQS dead letter queue"
+}
+
+output "sqs_dlq_arn" {
+  value       = aws_sqs_queue.dlq.arn
+  description = "The ARN of the SQS dead letter queue"
+}
+

@@ -157,6 +157,6 @@ def lambda_handler(event, context):
 
         except Exception as e:
             logger.error(f"Failed to process record: {e}")
-            continue
+            raise e
 
     return {"statusCode": 200, "body": "Batch processed successfully"}

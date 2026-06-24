@@ -9,6 +9,7 @@ graph TD
     A[Chaos Generator Script] -->|Post Raw Logs| B[FastAPI Gateway]
     B -->|Buffer Logs| C[Amazon SQS]
     C -->|Trigger| D[AWS Lambda]
+    C -->|Failed 3x| H[SQS DLQ]
     D -->|Check/Store MD5| E[Amazon DynamoDB]
     D -->|Analyze Unique Error| F[Gemini API]
     D -->|Post Alert| G[Discord / Slack Webhook]
@@ -47,3 +48,8 @@ gateway: A tiny FastAPI app running in a Docker container. It takes incoming log
 lambda: The core engine. It grabs messages from SQS, hashes the log content, and checks DynamoDB to see if we've seen it before. If it's a completely new error, it passes it to Gemini for a quick root-cause summary and hits a Discord/Slack webhook.
 
 terraform: Contains the files needed to spin up all the AWS infrastructure (SQS queues, Lambda functions, DynamoDB tables, and roles) automatically without dealing with the AWS console manually.
+
+## API Documentation & Local Testing
+
+When running the FastAPI gateway locally, you can access the interactive Swagger UI to view and test the API endpoints. Open your web browser and navigate to http://127.0.0.1:8000/docs to interact with the API documentation.
+
