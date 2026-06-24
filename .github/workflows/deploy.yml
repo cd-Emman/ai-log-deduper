@@ -47,10 +47,43 @@ jobs:
       - name: Run Pytest
         run: python -m pytest
 
+  security-scans:
+    name: Security & IaC Scans
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # TFLint IaC Linter
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v3
+      - name: Run TFLint
+        run: |
+          tflint --init
+          tflint --recursive
+
+      # Checkov static analysis (soft-fail enabled for hobby/Free Tier project)
+      - name: Run Checkov
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: terraform/
+          framework: terraform
+          soft_fail: true
+
+      # Trivy dependency scanner
+      - name: Run Trivy Dependency Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          ignore-unfixed: true
+          severity: 'HIGH,CRITICAL'
+          exit-code: '0'
+
   build-and-push:
     name: Build & Push Docker Image
     runs-on: ubuntu-latest
-    needs: [lint, test]
+    needs: [lint, test, security-scans]
     permissions:
       contents: read
       packages: write

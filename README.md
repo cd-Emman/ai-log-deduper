@@ -63,10 +63,11 @@ The project uses GitHub Actions for continuous integration and deployment. The p
 
 1. **Linting**: Runs Ruff to enforce Python code standards.
 2. **Testing**: Runs a mocked Pytest unit test suite covering FastAPI gateway and Lambda processor logic.
-3. **Build & Push**: Builds the FastAPI gateway Docker container and pushes it to GHCR.
-4. **Deploy**: Runs Terraform to automatically apply the infrastructure changes in AWS.
+3. **Security Scanning**: Executes TFLint, Checkov (IaC security check), and Trivy (filesystem scanner) to detect vulnerabilities and misconfigurations.
+4. **Build & Push**: Builds the FastAPI gateway Docker container and pushes it to GHCR.
+5. **Deploy**: Runs Terraform to automatically apply the infrastructure changes in AWS.
 
 > [!IMPORTANT]
-> The workflow enforces strict deployment guardrails. If linting or any unit test fails, the build stage is automatically blocked, preventing broken code from ever being deployed to AWS.
+> The workflow enforces strict deployment guardrails. If linting, unit tests, or security scans fail, the build stage is automatically blocked, preventing broken code from ever being deployed to AWS.
 
 
