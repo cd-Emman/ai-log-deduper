@@ -15,6 +15,11 @@ resource "aws_dynamodb_table" "table" {
     name = "error_hash"
     type = "S"
   }
+
+  ttl {
+    attribute_name = "ttl_timestamp"
+    enabled        = true
+  }
 }
 
 resource "aws_iam_role" "lambda_role" {

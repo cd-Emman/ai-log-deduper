@@ -122,13 +122,16 @@ def lambda_handler(event, context):
             log_hash = hashlib.md5(raw_log.encode("utf-8")).hexdigest()
 
             try:
+                # set fingerprint expiration to 24 hours from now
+                ttl_timestamp = int(time.time()) + 86400
                 # conditional expression drops the write if hash already exists in DB
                 table.put_item(
                     Item={
                         "error_hash": log_hash,
                         "service": service,
                         "raw_log": raw_log,
-                        "timestamp": int(time.time())
+                        "timestamp": int(time.time()),
+                        "ttl_timestamp": ttl_timestamp
                     },
                     ConditionExpression="attribute_not_exists(error_hash)"
                 )
