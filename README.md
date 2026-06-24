@@ -57,3 +57,16 @@ terraform: Contains the files needed to spin up all the AWS infrastructure (SQS 
 
 When running the FastAPI gateway locally, you can access the interactive Swagger UI to view and test the API endpoints. Open your web browser and navigate to http://127.0.0.1:8000/docs to interact with the API documentation.
 
+## CI/CD Pipeline & Automated Testing
+
+The project uses GitHub Actions for continuous integration and deployment. The pipeline triggers on every push to the `master` branch and runs the following stages:
+
+1. **Linting**: Runs Ruff to enforce Python code standards.
+2. **Testing**: Runs a mocked Pytest unit test suite covering FastAPI gateway and Lambda processor logic.
+3. **Build & Push**: Builds the FastAPI gateway Docker container and pushes it to GHCR.
+4. **Deploy**: Runs Terraform to automatically apply the infrastructure changes in AWS.
+
+> [!IMPORTANT]
+> The workflow enforces strict deployment guardrails. If linting or any unit test fails, the build stage is automatically blocked, preventing broken code from ever being deployed to AWS.
+
+
