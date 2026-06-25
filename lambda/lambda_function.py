@@ -37,9 +37,9 @@ dynamodb = boto3.resource("dynamodb")
 table = dynamodb.Table(DYNAMODB_TABLE_NAME) if DYNAMODB_TABLE_NAME else None
 
 def get_gemini_analysis(service: str, raw_log: str) -> str:
-    if not GEMINI_API_KEY or GEMINI_API_KEY.startswith("your_"):
+    if not GEMINI_API_KEY or GEMINI_API_KEY.startswith("your_") or GEMINI_API_KEY == "mock-gemini-key":
         logger.warning("GEMINI_API_KEY not configured. Skipping.")
-        return "Gemini API key not configured. Logging error analysis skipped."
+        return None
 
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
     
@@ -154,8 +154,8 @@ def lambda_handler(event, context):
                 logger.info(f"New unique log found ({log_hash}). Analyzing...")
                 analysis = get_gemini_analysis(service, raw_log)
                 
-                # Fallback to raw log alert if Gemini API is rate-limited or fails
-                if "Error analyzing log via Gemini" in analysis:
+                # Fallback to raw log alert if Gemini API is disabled, rate-limited, or fails
+                if not analysis or "Error analyzing log via Gemini" in analysis:
                     analysis = (
                         f"🚨 **New Unique Error in {service}** (AI Summary Unavailable)\n"
                         f"**Raw Log:**\n```\n{raw_log}\n```"

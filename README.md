@@ -61,8 +61,9 @@ When running the FastAPI gateway locally, you can access the interactive Swagger
 
 Run everything locally from scratch:
 
-1. Start mock AWS services (SQS, DynamoDB, SSM):
+1. Make the init script executable and start the LocalStack container (this pulls the localstack/localstack:3.8.0 image and maps SQS, DynamoDB, and SSM services to port 4566):
 ```bash
+chmod +x localstack-init.sh
 docker compose up -d
 ```
 
@@ -70,6 +71,7 @@ docker compose up -d
 ```bash
 source venv/bin/activate
 pip install -r gateway/requirements.txt
+pip install -r chaos_generator/requirements.txt
 ```
 
 3. Set env vars and boot the gateway:
@@ -83,28 +85,82 @@ export SQS_QUEUE_URL=http://sqs.us-east-1.localhost.localstack.cloud:4566/000000
 uvicorn gateway.main:app --port 8000
 ```
 
-4. Test ingestion:
+4. Send a manual test log to the gateway (in a separate terminal):
 ```bash
 curl -X POST http://127.0.0.1:8000/logs -H "Content-Type: application/json" -d '{"service": "local-test", "log": "Offline stack test error"}'
 ```
 
-5. Verify message is in SQS:
+5. Verify the message is in SQS:
 ```bash
 docker exec -it ai-log-deduper-localstack awslocal sqs receive-message --queue-url http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/ai-log-deduper-queue
 ```
 
+6. Set your Discord webhook parameter in LocalStack (optional):
+```bash
+docker exec -it ai-log-deduper-localstack awslocal ssm put-parameter \
+  --name "/ai-log-deduper/discord_webhook_url" \
+  --type "SecureString" \
+  --value "YOUR_REAL_DISCORD_WEBHOOK_URL" \
+  --overwrite
+```
+
+7. Run the local SQS-to-Lambda runner to process queue messages (in a separate terminal):
+```bash
+source venv/bin/activate
+python lambda_local_runner.py
+```
+
+8. Stream continuous fake errors using the chaos generator (in a separate terminal):
+```bash
+source venv/bin/activate
+python chaos_generator/chaos.py
+```
+
+
 
 ## CI/CD Pipeline & Automated Testing
 
-The project uses GitHub Actions for continuous integration and deployment. The pipeline triggers on every push to the `master` branch and runs the following stages:
+The project uses GitHub Actions for CI/CD. The pipeline triggers on push to master and runs the following stages:
 
-1. **Linting**: Runs Ruff to enforce Python code standards.
-2. **Testing**: Runs a mocked Pytest unit test suite covering FastAPI gateway and Lambda processor logic.
-3. **Security Scanning**: Executes TFLint, Checkov (IaC security check), and Trivy (filesystem scanner) to detect vulnerabilities and misconfigurations.
-4. **Build & Push**: Builds the FastAPI gateway Docker container and pushes it to GHCR.
-5. **Deploy**: Runs Terraform to automatically apply the infrastructure changes in AWS.
+1. Linting: Runs Ruff to check code standards.
+2. Testing: Runs the mocked Pytest suite for the gateway and Lambda processor.
+3. Security Scanning: Runs TFLint, Checkov, and Trivy to find vulnerabilities and misconfigurations.
+4. Build & Push: Builds the FastAPI gateway container and pushes to GHCR.
+5. Deploy: Runs Terraform to apply infrastructure changes in AWS.
 
-> [!IMPORTANT]
-> The workflow enforces strict deployment guardrails. If linting, unit tests, or security scans fail, the build stage is automatically blocked, preventing broken code from ever being deployed to AWS.
+If linting, tests, or scans fail, the pipeline blocks the build and stops the deployment.
+
+
+## Production Deployment
+
+To deploy this pipeline to your own AWS account:
+
+1. Create your own remote Terraform backend:
+   - Navigate to `terraform/bootstrap/` and run `terraform apply` to create your S3 state bucket and DynamoDB lock table.
+   - Update `terraform/backend.tf` with your newly created S3 bucket name.
+
+2. Configure GitHub Secrets in your repository:
+   - `AWS_ACCESS_KEY_ID` & `AWS_SECRET_ACCESS_KEY`
+   - `GEMINI_API_KEY` (Gemini API access, optional. If omitted, the pipeline falls back to sending raw log alerts)
+   - `DISCORD_WEBHOOK_URL` (Target channel webhook)
+
+3. Push to `master` to trigger the automated CI/CD pipeline.
+
+## Local customization & port conflicts
+
+If port 8000 is already in use by another application on your machine:
+
+1. Boot the gateway on a different port:
+```bash
+uvicorn gateway.main:app --port 8080
+```
+
+2. Configure the chaos generator to point to the new port:
+```bash
+export GATEWAY_URL=http://localhost:8080/logs
+python chaos_generator/chaos.py
+```
+
+
 
 
