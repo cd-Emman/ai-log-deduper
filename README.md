@@ -116,6 +116,23 @@ source venv/bin/activate
 python chaos_generator/chaos.py
 ```
 
+### Testing against real AWS
+
+To point the local gateway to your real AWS account instead of LocalStack:
+
+1. Clear the mock environment overrides so boto3 uses your real credentials configured in `~/.aws/credentials`:
+```bash
+unset AWS_ACCESS_KEY_ID
+unset AWS_SECRET_ACCESS_KEY
+unset AWS_ENDPOINT_URL
+```
+
+2. Export your production SQS queue URL:
+```bash
+export SQS_QUEUE_URL="https://sqs.us-east-1.amazonaws.com/YOUR_ACCOUNT_ID/ai-log-deduper-queue"
+```
+
+3. Restart the gateway and run the chaos generator.
 
 
 ## CI/CD Pipeline & Automated Testing
