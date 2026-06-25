@@ -1,3 +1,4 @@
+# Decoupled from main workspace to prevent terraform destroy from deleting our state store and locks
 resource "aws_s3_bucket" "terraform_state" {
   bucket        = "ai-log-deduper-tf-state-293012441360"
   force_destroy = true

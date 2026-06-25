@@ -1,3 +1,4 @@
+# Remote state backend configuration (isolated to prevent deletion during teardown)
 terraform {
   backend "s3" {
     bucket         = "ai-log-deduper-tf-state-293012441360"

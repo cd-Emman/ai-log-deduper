@@ -152,7 +152,7 @@ If linting, tests, or scans fail, the pipeline blocks the build and stops the de
 
 To deploy this pipeline to your own AWS account:
 
-1. Create your own remote Terraform backend:
+1. Create your own remote Terraform backend (this is decoupled in a separate bootstrap folder to prevent `terraform destroy` from deleting your state storage):
    - Navigate to `terraform/bootstrap/` and run `terraform apply` to create your S3 state bucket and DynamoDB lock table.
    - Update `terraform/backend.tf` with your newly created S3 bucket name.
 
