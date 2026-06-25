@@ -1,0 +1,12 @@
+services:
+  localstack:
+    container_name: ai-log-deduper-localstack
+    image: localstack/localstack:3.8.0
+    ports:
+      - "127.0.0.1:4566:4566"
+    environment:
+      - SERVICES=sqs,dynamodb,ssm
+      - AWS_DEFAULT_REGION=us-east-1
+    volumes:
+      - "./localstack-init.sh:/etc/localstack/init/ready.d/init-aws.sh"
+      - "./.localstack:/var/lib/localstack"

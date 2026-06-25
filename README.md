@@ -57,6 +57,43 @@ terraform: Contains the files needed to spin up all the AWS infrastructure (SQS 
 
 When running the FastAPI gateway locally, you can access the interactive Swagger UI to view and test the API endpoints. Open your web browser and navigate to http://127.0.0.1:8000/docs to interact with the API documentation.
 
+## Local setup & offline testing
+
+Run everything locally from scratch:
+
+1. Start mock AWS services (SQS, DynamoDB, SSM):
+```bash
+docker compose up -d
+```
+
+2. Install dependencies:
+```bash
+source venv/bin/activate
+pip install -r gateway/requirements.txt
+```
+
+3. Set env vars and boot the gateway:
+```bash
+export AWS_ACCESS_KEY_ID=mock
+export AWS_SECRET_ACCESS_KEY=mock
+export AWS_REGION=us-east-1
+export AWS_ENDPOINT_URL=http://localhost:4566
+export SQS_QUEUE_URL=http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/ai-log-deduper-queue
+
+uvicorn gateway.main:app --port 8000
+```
+
+4. Test ingestion:
+```bash
+curl -X POST http://127.0.0.1:8000/logs -H "Content-Type: application/json" -d '{"service": "local-test", "log": "Offline stack test error"}'
+```
+
+5. Verify message is in SQS:
+```bash
+docker exec -it ai-log-deduper-localstack awslocal sqs receive-message --queue-url http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/ai-log-deduper-queue
+```
+
+
 ## CI/CD Pipeline & Automated Testing
 
 The project uses GitHub Actions for continuous integration and deployment. The pipeline triggers on every push to the `master` branch and runs the following stages:
