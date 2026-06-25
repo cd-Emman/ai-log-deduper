@@ -5,7 +5,7 @@ A simple project to catch messy, multi-line application error logs and filter ou
 ## Architecture
 
 ```mermaid
-graph TD
+flowchart TD
     A[Chaos Generator Script] -->|Post Raw Logs| B[FastAPI Gateway]
     B -->|Buffer Logs| C[Amazon SQS]
     C -->|Trigger| D[AWS Lambda]
