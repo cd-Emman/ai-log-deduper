@@ -54,6 +54,7 @@ Here is the file structure and the purpose of each component in the repository:
 - [terraform/](./terraform/): Terraform configuration files.
 - [main.tf](./terraform/main.tf): Resource definitions including SQS queues, DLQ, IAM roles, Lambda triggers, DynamoDB table, and the CloudWatch dashboard.
 - [ec2.tf](./terraform/ec2.tf): Provisions the m7i-flex.large EC2 instance, security groups, and IAM instance profile to host the FastAPI gateway container.
+- [alerts.tf](./terraform/alerts.tf): Provisions the SQS DLQ CloudWatch alarm and SNS alerts topic for developer notification.
 - [backend.tf](./terraform/backend.tf): Configures the remote S3 and DynamoDB backend for Terraform state tracking.
 - [providers.tf](./terraform/providers.tf): Declares required providers (AWS, archive) and version constraints.
 - [variables.tf](./terraform/variables.tf): Configures inputs like AWS region and SSM parameters.
@@ -139,6 +140,11 @@ Issues encountered during development and how they were resolved:
 - **Symptom**: Commits to the gateway service did not trigger updates on the live EC2 instance, causing the server to run outdated code.
 - **Cause**: The Terraform EC2 user data referenced the static `latest` Docker tag. Because the image name string did not change, Terraform saw no differences and skipped redeploying the EC2 instance.
 - **Fix**: Updated `.github/workflows/deploy.yml` to dynamically pass the unique Git commit SHA (`${{ github.sha }}`) as the `TF_VAR_gateway_image` variable to Terraform, forcing instance redeployments on every new push.
+
+#### Cannot access EC2 instance shell for troubleshooting
+- **Symptom**: Connection to port 8000 was refused, and there was no way to log into the server shell without configuring SSH key pairs.
+- **Cause**: The EC2 instance lacked the required IAM permissions to register with AWS Systems Manager (SSM) Session Manager.
+- **Fix**: Attached the `AmazonSSMManagedInstanceCore` managed policy to the EC2 instance's IAM role, enabling secure browser-based terminal sessions directly from the AWS Console.
 
 ### API & Integration Errors
 
@@ -229,7 +235,7 @@ Issues encountered during development and how they were resolved:
 ## 4. Completed Milestones & Roadmap
 
 - ✔ **CI/CD Pipeline Automation**: Created a GitHub Actions workflow to run Ruff, build/push the FastAPI Docker container, and run `terraform apply` automatically on pushes to `master`.
-- ✔ **Infrastructure Resilience**: Set up SQS DLQ with a `maxReceiveCount` of 3 to isolate failed logs, and implemented a redrive mechanism to re-process them.
+- ✔ **Infrastructure Resilience**: Set up SQS DLQ with a `maxReceiveCount` of 3 to isolate failed logs, implemented a redrive mechanism to re-process them, and configured a CloudWatch metric alarm with SNS notifications for instant alerting.
 - ✔ **Security Enhancements (SSM)**: Swapped plaintext variables for AWS Systems Manager (SSM) Parameter Store SecureString parameters to fetch keys at runtime.
 - ✔ **CI/CD Security Scanners**: Integrated Checkov, TFLint, and Trivy scanning into the CI/CD pipeline.
 - ✔ **Automated Testing**: Integrated Pytest into the pipeline to test FastAPI and Lambda logic.

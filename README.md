@@ -126,6 +126,7 @@ To deploy this pipeline to your own AWS account:
    - `AWS_ACCESS_KEY_ID` & `AWS_SECRET_ACCESS_KEY`
    - `GEMINI_API_KEY` (Gemini API access, optional. If omitted, the pipeline falls back to sending raw log alerts)
    - `DISCORD_WEBHOOK_URL` (Target channel webhook)
+   - `ALERT_EMAIL` (Email address to receive DLQ alerts)
 
 3. Push to `master` to trigger the automated CI/CD pipeline.
 

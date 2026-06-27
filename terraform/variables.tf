@@ -28,3 +28,10 @@ variable "gateway_image" {
   default     = "ghcr.io/cd-emman/ai-log-deduper-gateway:latest"
 }
 
+variable "alert_email" {
+  type        = string
+  description = "Email address to receive DLQ alerts"
+  default     = "team-alerts@example.com"
+}
+
+

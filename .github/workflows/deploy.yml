@@ -147,4 +147,5 @@ jobs:
           TF_VAR_gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
           TF_VAR_discord_webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
           TF_VAR_gateway_image: ghcr.io/${{ steps.repository_owner.outputs.owner }}/ai-log-deduper-gateway:${{ github.sha }}
+          TF_VAR_alert_email: ${{ secrets.ALERT_EMAIL }}
         run: terraform apply -auto-approve
