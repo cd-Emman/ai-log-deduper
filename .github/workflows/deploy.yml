@@ -132,6 +132,11 @@ jobs:
         with:
           terraform_version: 1.5.7
 
+      - name: Lowercase Repository Owner
+        id: repository_owner
+        run: |
+          echo "owner=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
       - name: Terraform Init
         working-directory: ./terraform
         run: terraform init
@@ -141,4 +146,5 @@ jobs:
         env:
           TF_VAR_gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
           TF_VAR_discord_webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          TF_VAR_gateway_image: ghcr.io/${{ steps.repository_owner.outputs.owner }}/ai-log-deduper-gateway:${{ github.sha }}
         run: terraform apply -auto-approve

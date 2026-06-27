@@ -21,3 +21,10 @@ variable "discord_webhook_url" {
   description = "Webhook URL to send alerts to Discord or Slack"
   sensitive   = true
 }
+
+variable "gateway_image" {
+  type        = string
+  description = "Docker image name for the FastAPI gateway"
+  default     = "ghcr.io/cd-emman/ai-log-deduper-gateway:latest"
+}
+
