@@ -80,26 +80,7 @@ source venv/bin/activate
 python chaos_generator/chaos.py
 ```
 
-### Testing against the live cloud deployment
-
-To run the chaos generator against the live FastAPI gateway hosted on EC2:
-
-1. Get the public IP of your EC2 instance from the Terraform outputs:
-```bash
-terraform output gateway_instance_public_ip
-```
-
-2. Export the gateway URL pointing to the live instance:
-```bash
-export GATEWAY_URL="http://<EC2_PUBLIC_IP>:8000/logs"
-```
-
-3. Run the chaos generator to stream errors to the live EC2 gateway:
-```bash
-source venv/bin/activate
-python chaos_generator/chaos.py
-```
-
+9. **Check Local Metrics:** To verify that local infrastructure monitoring works, run `awslocal cloudwatch list-dashboards` to confirm the custom dashboard has been emulated in your local environment.
 
 ## CI/CD Pipeline & Automated Testing
 
@@ -137,6 +118,35 @@ If you are running the deployment manually from your local terminal instead of C
 terraform apply \
   -var="gateway_image=ghcr.io/<your-github-username>/ai-log-deduper-gateway:latest"
 ```
+
+## Testing Against the Live Cloud Deployment
+
+To run the chaos generator against the live FastAPI gateway hosted on EC2:
+
+1. Get the public IP of your EC2 instance from the Terraform outputs:
+```bash
+terraform output gateway_instance_public_ip
+```
+
+2. Export the gateway URL pointing to the live instance:
+```bash
+export GATEWAY_URL="http://<EC2_PUBLIC_IP>:8000/logs"
+```
+
+3. Run the chaos generator to stream errors to the live EC2 gateway:
+```bash
+source venv/bin/activate
+python chaos_generator/chaos.py
+```
+
+
+## Verify Monitoring
+
+Once the pipeline is live and receiving logs:
+
+1. Log into your AWS Console and head to **CloudWatch > Dashboards**. The Terraform script automatically deploys a custom dashboard tracking real-time SQS queue metrics, Lambda errors, and DynamoDB capacity.
+2. Verify that AWS SNS has sent a subscription confirmation email to your configured `ALERT_EMAIL` (check your spam folder if you do not receive it within a few minutes). You must click the confirmation link in that email to activate notifications.
+
 
 ## Local customization & port conflicts
 
