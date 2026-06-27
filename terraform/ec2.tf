@@ -1,3 +1,18 @@
+data "aws_ami" "ubuntu" {
+  most_recent = true
+  owners      = ["099720109477"] # Canonical
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+}
+
 resource "aws_security_group" "gateway_sg" {
   name        = "${var.project_name}-gateway-sg"
   description = "Security group for FastAPI gateway EC2 instance"
@@ -70,7 +85,7 @@ resource "aws_iam_instance_profile" "ec2_profile" {
 }
 
 resource "aws_instance" "gateway" {
-  ami                  = "ami-0b6d9d33ba97d99"
+  ami                  = data.aws_ami.ubuntu.id
   instance_type        = "m7i-flex.large"
   subnet_id            = aws_subnet.public.id
   vpc_security_group_ids = [aws_security_group.gateway_sg.id]
