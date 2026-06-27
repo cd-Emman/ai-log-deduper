@@ -15,11 +15,16 @@ flowchart TD
     D -->|Conditional Check| E[(Amazon DynamoDB)]
     D -->|Generate Analysis| F[Gemini Developer API]
     D -->|Post Alert| G[Discord / Slack Webhook]
+    H -->|Trigger Alarm| I[CloudWatch Metric Alarm]
+    I -->|Publish Alert| J[SNS Alerts Topic]
+    J -->|Email Alert| K[Team Email]
 ```
 
 ### Architectural Decisions and Trade-offs
 
 An asynchronous SQS-to-Lambda queue architecture was selected to act as a buffer. This design protects the Gemini API from being overloaded by sudden bursts of raw application logs. Offloading log ingestion to the FastAPI gateway and buffering messages in SQS ensures the client receives an immediate response while allowing Lambda to process messages sequentially within API rate limits.
+
+Additionally, a Dead Letter Queue (DLQ) is integrated to isolate failed logs (poison pills) that fail processing 3 times, preventing them from blocking the primary log queue. To prevent these failures from going unnoticed, a CloudWatch metric alarm monitors DLQ message counts and publishes notifications to an Amazon SNS email topic to alert the engineering team.
 
 ---
 

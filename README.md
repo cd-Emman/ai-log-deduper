@@ -1,6 +1,6 @@
 # AI Log Deduper
 
-A tool to ingest multi-line application error logs, filter out duplicates, and send clean alerts. It uses FastAPI as an ingestion gateway, AWS SQS and Lambda for processing, DynamoDB to check for duplicates, and the Gemini API to summarize unique errors before posting to Discord or Slack.
+A tool to ingest multi-line application error logs, filter out duplicates, and send clean alerts. It uses FastAPI as an ingestion gateway, AWS SQS and Lambda for processing, DynamoDB to check for duplicates, the Gemini API to summarize unique errors before posting to Discord or Slack, and Amazon CloudWatch and SNS to notify developers of queue processing failures.
 
 ## Architecture
 
@@ -13,6 +13,9 @@ flowchart TD
     D -->|Check/Store MD5| E[Amazon DynamoDB]
     D -->|Analyze Unique Error| F[Gemini API]
     D -->|Post Alert| G[Discord / Slack Webhook]
+    H -->|Trigger Alarm| I[CloudWatch Metric Alarm]
+    I -->|Publish Alert| J[SNS Alerts Topic]
+    J -->|Email Alert| K[Team Email]
 ```
 
 [Here's the full Project Journey & Troubleshooting Log to see how this architecture was built and debugged.](./project.md)
