@@ -129,6 +129,14 @@ To deploy this pipeline to your own AWS account:
 
 3. Push to `master` to trigger the automated CI/CD pipeline.
 
+During deployment, the CI/CD pipeline will build the FastAPI Docker image, publish it to your GitHub Container Registry (GHCR), and deploy it to the EC2 instance automatically.
+
+If you are running the deployment manually from your local terminal instead of CI/CD, you can override the image location to use your own registry:
+```bash
+terraform apply \
+  -var="gateway_image=ghcr.io/<your-github-username>/ai-log-deduper-gateway:latest"
+```
+
 ## Local customization & port conflicts
 
 If port 8000 is already in use by another application on your machine:
